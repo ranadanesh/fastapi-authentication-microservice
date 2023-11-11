@@ -7,6 +7,8 @@ from .settings import port, mongodb_uri
 # from db import collection
 from .schemes import *
 
+
+
 router = APIRouter(tags=["home/"])
 
 
@@ -22,6 +24,23 @@ async def signup(user: UserCreate):
         return response.json()
 
 
+# @router.post('/login', status_code=status.HTTP_200_OK)
+# async def login(user: UserLogin):
+#     async with httpx.AsyncClient() as client:
+#         response = await client.post(f'http://127.0.0.1:8001/login', json=user.model_dump())
+#         if response.status_code == status.HTTP_400_BAD_REQUEST:
+#             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid Credentials!!!')
+#
+#         access_token = create_access_token(user.email)
+#         refresh_token = create_refresh_token(user.email)
+#
+#         return {
+#             "access_token": access_token,
+#             "refresh_token": refresh_token
+#         }
+
+
+
 @router.post('/login', status_code=status.HTTP_200_OK)
 async def login(user: UserLogin):
     async with httpx.AsyncClient() as client:
@@ -29,11 +48,18 @@ async def login(user: UserLogin):
         if response.status_code == status.HTTP_400_BAD_REQUEST:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid Credentials!!!')
 
-        access_token = create_access_token(user.username)
-        refresh_token = create_refresh_token(user.username)
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token
-        }
+        if response.status_code == status.HTTP_200_OK:
+
+            async with httpx.AsyncClient() as clients:
+                resp = await clients.post(f'http://127.0.0.1:8003/sendemail', json=user.model_dump())
+
+            access_token = create_access_token(user.email)
+            refresh_token = create_refresh_token(user.email)
+
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "response": resp.json()
+            }
 
 
